@@ -1,0 +1,21 @@
+.App {
+  text-align: center;
+  padding: 10rem;
+  font-size: 1.5rem;
+  letter-spacing: 1.5rem;
+  text-shadow: 0.5rem 0.5rem 1rem rgba(0,0,0,0.35);
+  color: #666666;
+  text-transform: uppercase;
+}
+
+.App-logo {
+  height: 5rem;
+  pointer-events: none;
+}
+
+.App-header {
+  background-color: white;
+  align-items: center;
+  justify-content: center;
+}
+
