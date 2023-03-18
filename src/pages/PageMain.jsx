@@ -67,8 +67,9 @@ export class PageMain extends Component {
       return [
          <MainFieldLevel
             key={"PageMain-MainFieldLevel"}
-            level_specifier={item_specifier}
             width_px={width_px}
+            level_specifier={item_specifier}
+            on_item_specify={item_specifier => this.on_item_specify(item_specifier)}
          />
       ]
    }

@@ -47,9 +47,9 @@ export class SidebarTabs extends Component {
    }
 
    render() {
-      const {tab_index, on_tab_select} = this.props;
+      const {width_px, tab_index, on_tab_select} = this.props;
       const tabs_style = {
-         backgroundColor: "#999999",
+         backgroundColor: "#888888",
          height: "1.25rem",
       }
       const tab_content = this.tab_content();
@@ -60,6 +60,7 @@ export class SidebarTabs extends Component {
          tab_index={tab_index}
          selected_content={tab_content}
          on_tab_select={tab_index => on_tab_select(tab_index)}
+         width_px={width_px}
       />
    }
 }
