@@ -242,7 +242,7 @@ export class LevelHeader extends Component {
       if (!decoded.level) {
          return "..."
       }
-      console.log("decoded", decoded)
+      // console.log("decoded", decoded)
       const stats_bar = this.render_stats_bar(decoded.level)
       const button_bar = this.render_button_bar(decoded.tab || "stats")
       const title_style = {width: width_px < 1500 ? "40px" : `${width_px / 10}px`}
