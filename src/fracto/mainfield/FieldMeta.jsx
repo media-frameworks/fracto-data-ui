@@ -16,6 +16,8 @@ import FractoTileMeta from 'fracto/common/tile/FractoTileMeta';
 
 const WRAPPER_MARGIN_PX = 25
 
+const FRACTO_DB_URL = 'http://127.0.0.1:3001';
+
 const FieldWrapper = styled(CoolStyles.Block)`
    margin: ${WRAPPER_MARGIN_PX}px;
 `;
@@ -106,24 +108,60 @@ export class FieldMeta extends Component {
       return meta_data;
    }
 
+   post_tile_meta = (tile, tile_data) => {
+      const url = `${FRACTO_DB_URL}/new_tile`;
+      const parent = tile.short_code.substr(0, tile.short_code.length - 1)
+      const data = {
+         short_code: tile.short_code,
+         parent: parent,
+         level: tile.short_code.length,
+         status: 'unknown',
+         bounds_left: tile.bounds.left,
+         bounds_top: tile.bounds.top,
+         bounds_right: tile.bounds.right,
+         bounds_bottom: tile.bounds.bottom,
+         highest_iteration_value: tile_data.highest_iteration_value,
+         max_iteration_count: tile_data.max_iteration_count,
+         pattern_count: tile_data.pattern_count,
+         total_iterations: tile_data.total_iterations
+      }
+      const data_keys = Object.keys(data)
+      const encoded_params = data_keys.map(key => {
+         return `${key}=${data[key]}`
+      })
+      const data_url = `${url}?${encoded_params.join('&')}`
+      fetch(data_url, {
+         body: JSON.stringify(data), // data you send.
+         headers: {'Content-Type': 'application/json'},
+         method: 'POST',
+         mode: 'no-cors', // no-cors, cors, *same-origin
+      }).then(function (response) {
+         if (response.body) {
+            return response.json();
+         }
+         return ["fail"];
+      }).then(function (json_data) {
+         console.log("post_tile_meta", url, json_data)
+      });
+   }
+
    meta_tile = (tile, cb) => {
+      const {meta_data} = this.state;
       if (!tile) {
          cb(false);
          return;
       }
-      const meta_name = `tiles/256/meta/${tile.short_code}.json`;
-      StoreS3.get_file_async(meta_name, "fracto", result => {
-         console.log("StoreS3.get_file_async", meta_name, result)
-         if (!result) {
-            this.setState({status_text: "generating metadata..."})
-            FractoMruCache.get_tile_data(tile.short_code, tile_data => {
-               FieldMeta.generate_tile_meta(tile.short_code, tile_data, cb)
-            })
-         } else {
-            this.setState({status_text: "metadata exists"})
-            cb(true);
-         }
-      })
+      const meta_keys = Object.keys(meta_data)
+      if (!meta_keys.length) {
+         this.setState({status_text: "generating metadata..."})
+         FractoMruCache.get_tile_data(tile.short_code, tile_data => {
+            const meta_data = FieldMeta.generate_tile_meta(tile.short_code, tile_data, cb)
+            this.post_tile_meta(tile, meta_data)
+         })
+      } else {
+         this.post_tile_meta(tile, meta_data)
+         cb (true)
+      }
    }
 
    load_tile_meta = (tile, cb) => {

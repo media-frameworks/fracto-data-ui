@@ -8,22 +8,22 @@ import FractoUtil from "fracto/common/FractoUtil";
 
 export const TILE_ACTION_CLASSIFY = "classify";
 export const TILE_ACTION_EDGE = "edge";
-export const TILE_ACTION_FILLS = "fills";
 export const TILE_ACTION_GENERATE = "generate";
 export const TILE_ACTION_INDEX = "index";
 export const TILE_ACTION_INSPECT = "inspect";
 export const TILE_ACTION_META = "meta";
 export const TILE_ACTION_STATS = "stats";
+export const TILE_ACTION_REPAIR = "repair";
 
 const BUTTON_LABELS = [
    TILE_ACTION_CLASSIFY,
    TILE_ACTION_EDGE,
-   TILE_ACTION_FILLS,
    TILE_ACTION_GENERATE,
    TILE_ACTION_INDEX,
    TILE_ACTION_INSPECT,
    TILE_ACTION_META,
    TILE_ACTION_STATS,
+   TILE_ACTION_REPAIR,
 ]
 
 const TitleBar = styled(CoolStyles.Block)`

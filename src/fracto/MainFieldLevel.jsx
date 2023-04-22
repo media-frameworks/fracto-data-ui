@@ -6,7 +6,7 @@ import {CoolStyles} from 'common/ui/CoolImports';
 import LevelHeader, {
    TILE_ACTION_CLASSIFY,
    TILE_ACTION_EDGE,
-   TILE_ACTION_FILLS,
+   // TILE_ACTION_REPAIR,
    TILE_ACTION_GENERATE,
    TILE_ACTION_INDEX,
    TILE_ACTION_INSPECT,
@@ -16,7 +16,7 @@ import LevelHeader, {
 
 import FieldClassify from './mainfield/FieldClassify';
 import FieldEdge from './mainfield/FieldEdge';
-import FieldFills from './mainfield/FieldFills';
+import FieldRepair from './mainfield/FieldRepair';
 import FieldGenerate from './mainfield/FieldGenerate';
 import FieldIndex from './mainfield/FieldIndex';
 import FieldInspect from './mainfield/FieldInspect';
@@ -54,8 +54,8 @@ export class MainFieldLevel extends Component {
             return <FieldClassify level={level} width_px={width_px} />
          case TILE_ACTION_EDGE:
             return <FieldEdge level={level} width_px={width_px} />
-         case TILE_ACTION_FILLS:
-            return <FieldFills level={level} width_px={width_px} />
+         // case TILE_ACTION_REPAIR:
+         //    return <FieldRepair level={level} width_px={width_px} />
          case TILE_ACTION_GENERATE:
             return <FieldGenerate level={level} width_px={width_px} />
          case TILE_ACTION_INDEX:

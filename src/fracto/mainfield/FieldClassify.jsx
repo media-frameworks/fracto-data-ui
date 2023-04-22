@@ -3,7 +3,6 @@ import PropTypes from 'prop-types';
 import styled from "styled-components";
 
 import {CoolStyles} from 'common/ui/CoolImports';
-import StoreS3 from 'common/system/StoreS3';
 
 import FractoData, {
    BIN_VERB_INDEXED,
@@ -16,6 +15,7 @@ import FractoUtil from 'fracto/common/FractoUtil';
 
 import FractoTileAutomate, {CONTEXT_SIZE_PX, TILE_SIZE_PX} from 'fracto/common/tile/FractoTileAutomate';
 import FractoTileDetails from 'fracto/common/tile/FractoTileDetails';
+import FractoMruCache from "../common/data/FractoMruCache";
 
 const WRAPPER_MARGIN_PX = 25
 
@@ -50,12 +50,12 @@ export class FieldClassify extends Component {
    componentDidMount() {
       const {level} = this.props;
       FractoDataLoader.load_tile_set_async(BIN_VERB_POTENTIALS, result => {
-         console.log("FractoDataLoader.load_tile_set_async", BIN_VERB_POTENTIALS, result)
          const new_tiles = FractoData.get_cached_tiles(level, BIN_VERB_POTENTIALS)
+         console.log("FractoDataLoader.load_tile_set_async", BIN_VERB_POTENTIALS, result)
          this.setState({
             new_loading: false,
             new_tiles: new_tiles,
-            tile_index: 0
+            tile_index: new_tiles.length ? 0 : -1
          });
       })
       FractoDataLoader.load_tile_set_async(BIN_VERB_COMPLETED, result => {
@@ -79,10 +79,9 @@ export class FieldClassify extends Component {
       console.log("classify_tile", tile)
 
       const parent_short_code = tile.short_code.substr(0, tile.short_code.length - 1)
-      const json_name = `tiles/256/indexed/${parent_short_code}.json`;
-      StoreS3.get_file_async(json_name, "fracto", json_str => {
-         console.log("StoreS3.get_file_async", json_name);
-         if (!json_str) {
+      FractoMruCache.get_tile_data(parent_short_code, tile_data => {
+         console.log("StoreS3.get_file_async", parent_short_code, tile_data);
+         if (!tile_data) {
             this.move_tile(tile.short_code, "new", "error", result => {
                const message = "error reading parent tile"
                this.setState({most_recent_result: message})
@@ -124,7 +123,6 @@ export class FieldClassify extends Component {
          }
          let is_empty = true;
          let is_inland = true;
-         const tile_data = JSON.parse(json_str);
          for (let img_x = col_start; img_x < col_end; img_x++) {
             for (let img_y = row_start; img_y < row_end; img_y++) {
                const patern = tile_data[img_x][img_y][0];
@@ -162,8 +160,7 @@ export class FieldClassify extends Component {
          new_loading, indexed_loading, completed_loading
       } = this.state;
       const {level, width_px} = this.props;
-      const loading = !new_loading && !indexed_loading && !completed_loading
-      if (loading) {
+      if (new_loading || indexed_loading || completed_loading) {
          return FractoCommon.loading_wait_notice()
       }
       if (!new_tiles.length) {

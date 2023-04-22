@@ -6,8 +6,9 @@ import {CoolStyles} from 'common/ui/CoolImports';
 import FractoData from 'fracto/common/data/FractoData';
 import FractoUtil from "fracto/common/FractoUtil";
 
-const MAX_LEVEL = 20;
+const MAX_LEVEL = 35;
 const INDEX_WIDTH_PX = 50;
+const ROW_HEIGHT_PX = 25;
 
 const LevelsWraper = styled(CoolStyles.Block)`
    height: auto;
@@ -18,7 +19,7 @@ const LevelRow = styled(CoolStyles.Block)`
    ${CoolStyles.pointer}
    ${CoolStyles.noselect}
    margin: 0;
-   height: 2.25rem;
+   height: ${ROW_HEIGHT_PX}px;
 `;
 
 const IndexWraper = styled(CoolStyles.InlineBlock)`
@@ -33,21 +34,20 @@ const LevelIndex = styled(CoolStyles.InlineBlock)`
    ${CoolStyles.bold}
    ${CoolStyles.narrow_border_radius}
    color: black;
-   border: 0.125rem solid black;
-   margin: 4px 4px 0 0;
-   font-size: 28px;
-   line-height: 25px;
-   height: 24px;
+   border: 2px solid black;
+   margin: 2px 2px 0 0;
+   font-size: ${ROW_HEIGHT_PX - 8}px;
+   height: ${ROW_HEIGHT_PX - 6}px;
 `;
 
 const ColorBarWrapper = styled(CoolStyles.InlineBlock)`
    ${CoolStyles.narrow_border_radius}
-   border: 0.125rem solid black;
-   margin-top: 0.25rem;   
+   border: 2px solid black;
+   margin-top: 2px;   
 `;
 
 const ColorBar = styled(CoolStyles.InlineBlock)`
-   height: 1.5rem;
+   height: ${ROW_HEIGHT_PX - 8}px;
 `;
 
 export class SidebarLevels extends Component {
@@ -160,7 +160,7 @@ export class SidebarLevels extends Component {
             style={{backgroundColor: is_selected ? "white" : '#aaaaaa'}}
             onClick={e => on_item_specify(`${i}`)}>
             <IndexWraper>
-               <LevelIndex style={ is_selected? {} : unselected_style}>{i}</LevelIndex>
+               <LevelIndex style={is_selected ? {} : unselected_style}>{i}</LevelIndex>
             </IndexWraper>
             <ColorBarWrapper style={{opacity: is_selected ? 1.0 : 0.5}}>
                {colorbar}
