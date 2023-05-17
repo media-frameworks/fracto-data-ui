@@ -2,6 +2,8 @@ import {Component} from 'react';
 import PropTypes from 'prop-types';
 import styled from "styled-components";
 
+import network from "common/config/network.json";
+
 import {CoolButton, CoolStyles} from 'common/ui/CoolImports';
 import FractoData, {
    BIN_VERB_READY,
@@ -13,7 +15,7 @@ import FractoData, {
 } from "../common/data/FractoData";
 import FractoDataLoader from "../common/data/FractoDataLoader";
 
-const FRACTO_DB_URL = 'http://localhost:3001';
+const FRACTO_DB_URL = network.db_server_url;
 
 const HeadingWrapper = styled(CoolStyles.Block)`
    ${CoolStyles.bold}

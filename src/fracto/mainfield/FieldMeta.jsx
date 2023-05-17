@@ -2,21 +2,22 @@ import {Component} from 'react';
 import PropTypes from 'prop-types';
 import styled from "styled-components";
 
+import network from "common/config/network.json";
 import {CoolStyles} from 'common/ui/CoolImports';
 import StoreS3 from 'common/system/StoreS3';
 
-import FractoData, {BIN_VERB_INDEXED} from 'fracto/common/data/FractoData';
-import FractoDataLoader from 'fracto/common/data/FractoDataLoader';
-import FractoMruCache from "fracto/common/data/FractoMruCache";
 import FractoCommon from "../common/FractoCommon";
+import FractoData, {BIN_VERB_INDEXED} from '../common/data/FractoData';
+import FractoDataLoader from '../common/data/FractoDataLoader';
+import FractoMruCache from "../common/data/FractoMruCache";
 
-import FractoTileAutomate, {CONTEXT_SIZE_PX, TILE_SIZE_PX} from 'fracto/common/tile/FractoTileAutomate';
-import FractoTileDetails from 'fracto/common/tile/FractoTileDetails';
-import FractoTileMeta from 'fracto/common/tile/FractoTileMeta';
+import FractoTileAutomate, {CONTEXT_SIZE_PX, TILE_SIZE_PX} from '../common/tile/FractoTileAutomate';
+import FractoTileDetails from '../common/tile/FractoTileDetails';
+import FractoTileMeta from '../common/tile/FractoTileMeta';
 
 const WRAPPER_MARGIN_PX = 25
 
-const FRACTO_DB_URL = 'http://127.0.0.1:3001';
+const FRACTO_DB_URL = network.db_server_url;
 
 const FieldWrapper = styled(CoolStyles.Block)`
    margin: ${WRAPPER_MARGIN_PX}px;
@@ -62,9 +63,10 @@ export class FieldMeta extends Component {
       FractoDataLoader.load_tile_set_async(BIN_VERB_INDEXED, result => {
          console.log("FractoDataLoader.load_tile_set_async", BIN_VERB_INDEXED, result)
          const indexed_tiles = FractoData.get_cached_tiles(level, BIN_VERB_INDEXED)
+         const tile_index = parseInt (localStorage.getItem(`meta_tile_index_${level}`))
          this.setState({
             indexed_tiles: indexed_tiles,
-            tile_index: 0
+            tile_index: tile_index ? tile_index : 0,
          });
          this.load_tile_meta(indexed_tiles[0], meta_data => {
             console.log("load_tile_meta", meta_data)
@@ -183,10 +185,12 @@ export class FieldMeta extends Component {
 
    on_tile_select = (tile_index) => {
       const {indexed_tiles} = this.state;
+      const {level} = this.props
       if (tile_index >= indexed_tiles.length) {
          return;
       }
       this.setState({tile_index: tile_index})
+      localStorage.setItem(`meta_tile_index_${level}`, tile_index)
       const tile = indexed_tiles[tile_index]
       this.load_tile_meta(tile, meta_data => {
          if (!meta_data) {

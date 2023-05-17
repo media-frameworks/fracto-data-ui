@@ -25,9 +25,10 @@ export class PageMain extends Component {
    componentDidMount() {
       const tab_index = localStorage.getItem("tab_index")
       const item_specifier = localStorage.getItem("item_specifier")
+      console.log("PageMain item_specifier", item_specifier)
       this.setState({
          tab_index: tab_index !== null ? parseInt(tab_index) : 0,
-         item_specifier: item_specifier ? item_specifier : "",
+         item_specifier: item_specifier ? item_specifier : "2",
       })
    }
 

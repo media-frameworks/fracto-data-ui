@@ -14,6 +14,7 @@ export const TILE_ACTION_INSPECT = "inspect";
 export const TILE_ACTION_META = "meta";
 export const TILE_ACTION_STATS = "stats";
 export const TILE_ACTION_REPAIR = "repair";
+export const TILE_ACTION_POINTS = "points";
 
 const BUTTON_LABELS = [
    TILE_ACTION_CLASSIFY,
@@ -22,8 +23,8 @@ const BUTTON_LABELS = [
    TILE_ACTION_INDEX,
    TILE_ACTION_INSPECT,
    TILE_ACTION_META,
+   TILE_ACTION_POINTS,
    TILE_ACTION_STATS,
-   TILE_ACTION_REPAIR,
 ]
 
 const TitleBar = styled(CoolStyles.Block)`
@@ -108,77 +109,84 @@ export class LevelHeader extends Component {
          const indexed_pct = Math.round(indexed_count * 1000 / total) / 10;
          color_boxes.push([
             <ColorBox
+               key={"indexed-color-box"}
                title={`${indexed_count} to be exact`}
                style={{backgroundColor: FractoUtil.fracto_pattern_color(3, 1000)}}>
                {`${indexed_pct}%`}
             </ColorBox>,
-            <TotalStat>indexed</TotalStat>
+            <TotalStat key={'indexed-total'}>indexed</TotalStat>
          ])
       }
       if (complete_count) {
          const complete_pct = Math.round(complete_count * 1000 / total) / 10;
          color_boxes.push([
             <ColorBox
+               key={"complete-color-box"}
                title={`${complete_count} to be exact`}
                style={{backgroundColor: FractoUtil.fracto_pattern_color(5, 1000)}}>
                {`${complete_pct}%`}
             </ColorBox>,
-            <TotalStat>complete</TotalStat>
+            <TotalStat key={'complete-total'}>complete</TotalStat>
          ])
       }
       if (ready_count) {
          const ready_pct = Math.round(ready_count * 1000 / total) / 10;
          color_boxes.push([
             <ColorBox
+               key={"ready-color-box"}
                title={`${ready_count} to be exact`}
                style={{backgroundColor: FractoUtil.fracto_pattern_color(9, 100)}}>
                {`${ready_pct}%`}
             </ColorBox>,
-            <TotalStat>ready</TotalStat>
+            <TotalStat key={'ready-total'}>ready</TotalStat>
          ])
       }
       if (inland_count) {
          const inland_pct = Math.round(inland_count * 1000 / total) / 10;
          color_boxes.push([
             <ColorBox
+               key={"inland-color-box"}
                title={`${inland_count} to be exact`}
                style={{backgroundColor: FractoUtil.fracto_pattern_color(17, 1000)}}>
                {`${inland_pct}%`}
             </ColorBox>,
-            <TotalStat>inland</TotalStat>
+            <TotalStat key={'inland-total'}>inland</TotalStat>
          ])
       }
       if (new_count) {
          const new_pct = Math.round(new_count * 1000 / total) / 10;
          color_boxes.push([
             <ColorBox
+               key={"new-color-box"}
                title={`${new_count} to be exact`}
                style={{backgroundColor: FractoUtil.fracto_pattern_color(7, 10000)}}>
                {`${new_pct}%`}
             </ColorBox>,
-            <TotalStat>new</TotalStat>
+            <TotalStat key={'new-total'}>new</TotalStat>
          ])
       }
       if (empty_count) {
          const empty_pct = Math.round(empty_count * 1000 / total) / 10;
          color_boxes.push([
             <ColorBox
+               key={"empty-color-box"}
                title={`${empty_count} to be exact`}
                style={{backgroundColor: FractoUtil.fracto_pattern_color(0, 100)}}>
                {`${empty_pct}%`}
             </ColorBox>,
-            <TotalStat>empty</TotalStat>
+            <TotalStat key={'empty-total'}>empty</TotalStat>
          ])
       }
       if (error_count) {
          const error_pct = Math.round(error_count * 1000 / total) / 10;
          color_boxes.push([
             <ColorBox
+               key={"error-color-box"}
                title={`${error_count} to be exact`}
                style={{backgroundColor: FractoUtil.fracto_pattern_color(2, 1000)}}>
                {`${error_pct}%`}
             </ColorBox>,
-            <TotalStat>error</TotalStat>
+            <TotalStat key={'error-total'}>error</TotalStat>
          ])
       }
 
@@ -211,6 +219,7 @@ export class LevelHeader extends Component {
       }
       return BUTTON_LABELS.map(label => {
          return <HeaderButton
+            key={`HeaderButton-${label}`}
             onClick={e => this.on_tab_select(label)}
             style={label === selected_tab ? selected_style : button_style}>
             {label}
@@ -246,15 +255,17 @@ export class LevelHeader extends Component {
       const stats_bar = this.render_stats_bar(decoded.level)
       const button_bar = this.render_button_bar(decoded.tab || "stats")
       const title_style = {width: width_px < 1500 ? "40px" : `${width_px / 10}px`}
-      return [
-         <TitleBar>
-            <LevelTitle style={title_style}>{width_px < 1500 ? decoded.level : `Level ${decoded.level}`}</LevelTitle>
-            <CoolStyles.InlineBlock>
-               {stats_bar}
-               {button_bar}
-            </CoolStyles.InlineBlock>
-         </TitleBar>
-      ];
+      return <TitleBar>
+         <LevelTitle
+            style={title_style}>
+            {width_px < 1500 ? decoded.level : `Level ${decoded.level}`}
+         </LevelTitle>
+         <CoolStyles.InlineBlock>
+            {stats_bar}
+            {button_bar}
+         </CoolStyles.InlineBlock>
+      </TitleBar>
+
    }
 }
 

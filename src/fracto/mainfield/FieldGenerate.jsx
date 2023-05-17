@@ -3,17 +3,22 @@ import PropTypes from 'prop-types';
 import styled from "styled-components";
 
 import {CoolStyles} from 'common/ui/CoolImports';
-import StoreS3 from 'common/system/StoreS3';
 
-import FractoCommon from "../common/FractoCommon";
-import FractoUtil from "../common/FractoUtil";
+import FractoCommon from "fracto/common/FractoCommon";
 
-import FractoCalc from "../common/data/FractoCalc";
-import FractoDataLoader from "../common/data/FractoDataLoader";
-import FractoData, {BIN_VERB_INDEXED, BIN_VERB_INLAND, BIN_VERB_READY} from "../common/data/FractoData";
+import FractoDataLoader from "fracto/common/data/FractoDataLoader";
+import FractoData, {
+   BIN_VERB_INDEXED,
+   BIN_VERB_INLAND,
+   BIN_VERB_READY
+} from "fracto/common/data/FractoData";
 
-import FractoTileAutomate, {CONTEXT_SIZE_PX, TILE_SIZE_PX} from "../common/tile/FractoTileAutomate";
-import FractoTileDetails from "../common/tile/FractoTileDetails";
+import FractoTileAutomate, {
+   CONTEXT_SIZE_PX,
+   TILE_SIZE_PX
+} from "fracto/common/tile/FractoTileAutomate";
+import FractoTileGenerate from "fracto/common/tile/FractoTileGenerate"
+import FractoTileDetails from "fracto/common/tile/FractoTileDetails";
 
 const WRAPPER_MARGIN_PX = 25
 
@@ -45,13 +50,16 @@ export class FieldGenerate extends Component {
 
    componentDidMount() {
       const {level} = this.props;
+      const index_key = `generate-${level}-index`
+      const tile_index = parseInt(localStorage.getItem(index_key))
+      console.log("tile_index",index_key, tile_index)
       FractoDataLoader.load_tile_set_async(BIN_VERB_READY, result => {
          console.log("FractoDataLoader.load_tile_set_async", BIN_VERB_READY, result)
          const ready_tiles = FractoData.get_cached_tiles(level, BIN_VERB_READY)
          this.setState({
             ready_tiles: ready_tiles,
             ready_tiles_loaded: true,
-            tile_index: 0,
+            tile_index: tile_index ? tile_index : 0,
          });
       });
       FractoDataLoader.load_tile_set_async(BIN_VERB_INLAND, result => {
@@ -60,8 +68,7 @@ export class FieldGenerate extends Component {
          console.log("inland tiles count", inland_tiles.length)
          this.setState({
             inland_tiles: inland_tiles,
-            inland_tiles_loaded: true,
-            tile_index: 0,
+            inland_tiles_loaded: true
          });
       });
       FractoDataLoader.load_tile_set_async(BIN_VERB_INDEXED, result => {
@@ -77,97 +84,11 @@ export class FieldGenerate extends Component {
       });
    }
 
-   calculate_tile = (tile, tile_points, cb) => {
-      console.log("calculate_tile", tile)
-      const increment = (tile.bounds.right - tile.bounds.left) / 256.0;
-      for (let img_x = 0; img_x < 256; img_x++) {
-         const x = tile.bounds.left + img_x * increment;
-         for (let img_y = 0; img_y < 256; img_y++) {
-            if (img_x % 2 === 0 && img_y % 2 === 0) {
-               continue;
-            }
-            const y = tile.bounds.top - img_y * increment;
-            const values = FractoCalc.calc(x, y);
-            tile_points[img_x][img_y] = [values.pattern, values.iteration];
-         }
-      }
-      const index_url = `tiles/256/indexed/${tile.short_code}.json`;
-      StoreS3.put_file_async(index_url, JSON.stringify(tile_points), "fracto", result => {
-         console.log("StoreS3.put_file_async", index_url, result);
-         FractoUtil.tile_to_bin(tile.short_code, "ready", "complete", result => {
-            console.log("ToolUtils.tile_to_bin", tile.short_code, result);
-         })
-         FractoUtil.tile_to_bin(tile.short_code, "inland", "complete", result => {
-            console.log("ToolUtils.tile_to_bin", tile.short_code, result);
-            cb("generated tile")
-         })
-      })
-   }
-
-   prepare_generator = (parent_tile_data, quad_code) => {
-      console.log("prepare_generator", parent_tile_data.length, quad_code)
-      let col_start, col_end, row_start, row_end;
-      switch (quad_code) {
-         case '0':
-            col_start = 0;
-            col_end = 128;
-            row_start = 0;
-            row_end = 128;
-            break;
-         case '1':
-            col_start = 128;
-            col_end = 256;
-            row_start = 0;
-            row_end = 128;
-            break;
-         case '2':
-            col_start = 0;
-            col_end = 128;
-            row_start = 128;
-            row_end = 256;
-            break;
-         case '3':
-            col_start = 128;
-            col_end = 256;
-            row_start = 128;
-            row_end = 256;
-            break;
-         default:
-            console.log('bad quad_code');
-            return null;
-      }
-      const tile_points = new Array(256).fill(0).map(() => new Array(256).fill([0, 0]));
-      for (let img_x = col_start, result_col = 0; img_x < col_end; img_x++, result_col += 2) {
-         for (let img_y = row_start, result_row = 0; img_y < row_end; img_y++, result_row += 2) {
-            tile_points[result_col][result_row] = parent_tile_data[img_x][img_y]
-         }
-      }
-      return tile_points;
-   }
-
-   generate_tile = (tile, cb) => {
-      const parent_short_code = tile.short_code.substr(0, tile.short_code.length - 1)
-      const quad_code = tile.short_code[tile.short_code.length - 1];
-      const parent_index_url = `tiles/256/indexed/${parent_short_code}.json`;
-      StoreS3.get_file_async(parent_index_url, "fracto", json_str => {
-         console.log("StoreS3.get_file_async", parent_index_url);
-         if (!json_str) {
-            console.log("parent tile for generation", parent_index_url);
-            cb("parent tile is not indexed");
-         } else {
-            const parent_tile_data = JSON.parse(json_str);
-            const tile_points = this.prepare_generator(parent_tile_data, quad_code)
-            if (!tile_points) {
-               cb("error preparing generator")
-            } else {
-               // setTimeout(() => FractoUtil.data_to_canvas(tile_points, ctx), 100);
-               this.calculate_tile(tile, tile_points, result => {
-                  // FractoUtil.data_to_canvas(tile_points, ctx)
-                  cb(result)
-               });
-            }
-         }
-      })
+   set_tile_index = (tile_index) => {
+      const {level} = this.props;
+      this.setState({tile_index: tile_index})
+      const index_key = `generate-${level}-index`
+      localStorage.setItem(index_key, `${tile_index}`)
    }
 
    render() {
@@ -196,8 +117,8 @@ export class FieldGenerate extends Component {
                all_tiles={all_tiles}
                tile_index={tile_index}
                level={level - 2}
-               tile_action={this.generate_tile}
-               on_tile_select={tile_index => this.setState({tile_index: tile_index})}
+               tile_action={FractoTileGenerate.generate_tile}
+               on_tile_select={tile_index => this.set_tile_index(tile_index)}
                no_tile_mode={true}
             />
          </AutomateWrapper>

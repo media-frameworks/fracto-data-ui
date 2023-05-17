@@ -157,6 +157,7 @@ export class SidebarLevels extends Component {
          const colorbar = this.render_colorbar(i)
          const is_selected = i === selected_level;
          levels[i] = <LevelRow
+            key={`sidebar-level-${i}`}
             style={{backgroundColor: is_selected ? "white" : '#aaaaaa'}}
             onClick={e => on_item_specify(`${i}`)}>
             <IndexWraper>
