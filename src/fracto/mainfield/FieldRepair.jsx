@@ -5,10 +5,12 @@ import styled from "styled-components";
 import {CoolStyles} from 'common/ui/CoolImports';
 
 import FractoDataLoader from "../common/data/FractoDataLoader";
-import FractoData, {BIN_VERB_ERROR} from "../common/data/FractoData";
+import FractoData, {BIN_VERB_COMPLETED, BIN_VERB_ERROR, BIN_VERB_INDEXED} from "../common/data/FractoData";
 import FractoCommon from "../common/FractoCommon";
 import FractoTileAutomate, {CONTEXT_SIZE_PX, TILE_SIZE_PX} from "../common/tile/FractoTileAutomate";
 import FractoTileDetails from "../common/tile/FractoTileDetails";
+import FieldClassify from "./FieldClassify";
+import FractoUtil from "../common/FractoUtil";
 
 const WRAPPER_MARGIN_PX = 25
 
@@ -33,6 +35,10 @@ const AutomateWrapper = styled(CoolStyles.InlineBlock)`
    width: ${CONTEXT_SIZE_PX + TILE_SIZE_PX + 20}px;
 `;
 
+const RecentResult = styled(CoolStyles.Block)`
+   margin: 1rem;
+`;
+
 export class FieldRepair extends Component {
 
    static propTypes = {
@@ -43,42 +49,71 @@ export class FieldRepair extends Component {
    state = {
       error_tiles: [],
       tile_index: -1,
-      status_text: '',
+      completed_loading: true,
+      indexed_loading: true,
+      error_loading: true,
+      most_recent_result: ''
    };
 
    componentDidMount() {
       const {level} = this.props;
+      const level_key = `repair_index_${level}`
+      const tile_index = localStorage.getItem(level_key)
       FractoDataLoader.load_tile_set_async(BIN_VERB_ERROR, result => {
          console.log("FractoDataLoader.load_tile_set_async", BIN_VERB_ERROR, result)
          const error_tiles = FractoData.get_cached_tiles(level, BIN_VERB_ERROR)
          this.setState({
             error_tiles: error_tiles,
-            tile_index: 0
+            tile_index: tile_index ? parseInt(tile_index) : 0,
+            error_loading: false
          });
-         // this.load_tile_error(error_tiles[0], error_data => {
-         //    console.log("load_tile_error", error_data)
-         // })
+      });
+      FractoDataLoader.load_tile_set_async(BIN_VERB_COMPLETED, result => {
+         console.log("FractoDataLoader.load_tile_set_async", BIN_VERB_COMPLETED, result)
+         this.setState({completed_loading: false});
+      });
+      FractoDataLoader.load_tile_set_async(BIN_VERB_INDEXED, result => {
+         console.log("FractoDataLoader.load_tile_set_async", BIN_VERB_INDEXED, result)
+         this.setState({indexed_loading: false});
       });
    }
 
    on_tile_select = (tile_index) => {
       const {error_tiles} = this.state;
+      const {level} = this.props;
       if (tile_index >= error_tiles.length) {
          return;
       }
       console.log("on_tile_select", error_tiles[tile_index])
       this.setState({tile_index: tile_index})
+      const level_key = `repair_index_${level}`
+      localStorage.setItem(level_key, `${tile_index}`)
+   }
+
+   move_tile = (short_code, from, to, cb) => {
+      FractoUtil.tile_to_bin(short_code, from, to, result => {
+         console.log("FractoUtil.tile_to_bin", short_code, from, to, result);
+         cb(result.result)
+      })
    }
 
    repair_tile = (tile, cb) => {
-      console.log("repair_tile", tile)
-      cb(true)
+      this.move_tile(tile.short_code, "error", "new", result => {
+         FieldClassify.classify_tile(tile, message => {
+            cb(message)
+            this.setState({most_recent_result: message})
+         })
+      })
    }
 
    render() {
-      const {error_tiles, tile_index, status_text} = this.state;
+      const {
+         error_tiles, tile_index,
+         completed_loading, error_loading, indexed_loading,
+         most_recent_result
+      } = this.state;
       const {level, width_px} = this.props;
-      if (!error_tiles.length) {
+      if (completed_loading || error_loading || indexed_loading) {
          return FractoCommon.loading_wait_notice()
       }
       const details_width = width_px - (CONTEXT_SIZE_PX + TILE_SIZE_PX) - 40 - 2 * WRAPPER_MARGIN_PX;
@@ -101,7 +136,7 @@ export class FieldRepair extends Component {
                active_tile={active_tile}
                width_px={details_width}
             />
-            <StatusTextWrapper>{status_text}</StatusTextWrapper>
+            <RecentResult>{most_recent_result}</RecentResult>
          </DetailsWrapper>
       </FieldWrapper>
    }

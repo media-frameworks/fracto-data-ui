@@ -31,6 +31,10 @@ const RecentResult = styled(CoolStyles.Block)`
    margin: 1rem;
 `;
 
+const DetailsWrapper = styled(CoolStyles.InlineBlock)`
+   margin: 0;
+`;
+
 export class FieldClassify extends Component {
 
    static propTypes = {
@@ -49,13 +53,16 @@ export class FieldClassify extends Component {
 
    componentDidMount() {
       const {level} = this.props;
+      const level_key = `classify_index_${level}`
+      const tile_index = localStorage.getItem(level_key)
+
       FractoDataLoader.load_tile_set_async(BIN_VERB_POTENTIALS, result => {
          const new_tiles = FractoData.get_cached_tiles(level, BIN_VERB_POTENTIALS)
          console.log("FractoDataLoader.load_tile_set_async", BIN_VERB_POTENTIALS, result)
          this.setState({
             new_loading: false,
             new_tiles: new_tiles,
-            tile_index: new_tiles.length ? 0 : -1
+            tile_index: new_tiles.length && tile_index ? parseInt(tile_index) : 0
          });
       })
       FractoDataLoader.load_tile_set_async(BIN_VERB_COMPLETED, result => {
@@ -68,23 +75,22 @@ export class FieldClassify extends Component {
       });
    }
 
-   move_tile = (short_code, from, to, cb) => {
+   static move_tile = (short_code, from, to, cb) => {
       FractoUtil.tile_to_bin(short_code, from, to, result => {
          console.log("FractoUtil.tile_to_bin", short_code, from, to, result);
          cb(result.result)
       })
    }
 
-   classify_tile = (tile, cb) => {
+   static classify_tile = (tile, cb) => {
       console.log("classify_tile", tile)
 
       const parent_short_code = tile.short_code.substr(0, tile.short_code.length - 1)
       FractoMruCache.get_tile_data(parent_short_code, tile_data => {
-         console.log("StoreS3.get_file_async", parent_short_code, tile_data);
-         if (!tile_data) {
-            this.move_tile(tile.short_code, "new", "error", result => {
+         // console.log("FractoMruCache.get_tile_data", parent_short_code, tile_data);
+         if (!tile_data.length) {
+            FieldClassify.move_tile(parent_short_code, "indexed", "new", result => {
                const message = "error reading parent tile"
-               this.setState({most_recent_result: message})
                cb(message)
             })
             return;
@@ -123,8 +129,17 @@ export class FieldClassify extends Component {
          }
          let is_empty = true;
          let is_inland = true;
+         let is_error = false;
          for (let img_x = col_start; img_x < col_end; img_x++) {
+            if (!tile_data[img_x]) {
+               is_error = true;
+               break;
+            }
             for (let img_y = row_start; img_y < row_end; img_y++) {
+               if (!tile_data[img_x][img_y]) {
+                  is_error = true;
+                  break;
+               }
                const patern = tile_data[img_x][img_y][0];
                const iterations = tile_data[img_x][img_y][1];
                if (!patern) {
@@ -136,22 +151,37 @@ export class FieldClassify extends Component {
                   is_empty = false;
                }
             }
-            if (!is_empty && !is_inland) {
+            if ((!is_empty && !is_inland) || is_error) {
                break;
             }
          }
          let directory_bin = 'ready';
-         if (is_empty) {
+         if (is_error) {
+            directory_bin = 'error';
+         } else if (is_empty) {
             directory_bin = 'empty';
          } else if (is_inland) {
             directory_bin = 'inland';
          }
-         this.move_tile(tile.short_code, "new", directory_bin, result => {
+         FieldClassify.move_tile(tile.short_code, "new", directory_bin, result => {
             const message = `moving tile to ${directory_bin}: ${result}`
-            this.setState({most_recent_result: message})
             cb(message)
          })
       }, false);
+   }
+
+   on_tile_select = (tile_index) => {
+      const {level} = this.props;
+      this.setState({tile_index: tile_index})
+      const level_key = `classify_index_${level}`
+      localStorage.setItem(level_key, `${tile_index}`)
+   }
+
+   classify_tile_wrapper = (tile, cb) => {
+      FieldClassify.classify_tile(tile, message => {
+         this.setState({most_recent_result: message})
+         cb(message)
+      })
    }
 
    render() {
@@ -175,16 +205,18 @@ export class FieldClassify extends Component {
                all_tiles={new_tiles}
                tile_index={tile_index}
                level={level - 1}
-               tile_action={this.classify_tile}
-               on_tile_select={tile_index => this.setState({tile_index: tile_index})}
+               tile_action={this.classify_tile_wrapper}
+               on_tile_select={tile_index => this.on_tile_select(tile_index)}
                no_tile_mode={true}
             />
          </AutomateWrapper>
-         <FractoTileDetails
-            active_tile={new_tiles[tile_index]}
-            width_px={width_px - (CONTEXT_SIZE_PX + TILE_SIZE_PX) - 40 - 2 * WRAPPER_MARGIN_PX}
-         />
-         <RecentResult>{most_recent_result}</RecentResult>
+         <DetailsWrapper>
+            <FractoTileDetails
+               active_tile={new_tiles[tile_index]}
+               width_px={width_px - (CONTEXT_SIZE_PX + TILE_SIZE_PX) - 40 - 2 * WRAPPER_MARGIN_PX}
+            />
+            <RecentResult>{most_recent_result}</RecentResult>
+         </DetailsWrapper>
       </FieldWrapper>
    }
 }
