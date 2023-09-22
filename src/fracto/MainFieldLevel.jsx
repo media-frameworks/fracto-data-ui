@@ -17,7 +17,7 @@ import LevelHeader, {
 import FieldClassify from './mainfield/FieldClassify';
 import FieldEdge from './mainfield/FieldEdge';
 import FieldRepair from './mainfield/FieldRepair';
-import FieldGenerate from './mainfield/FieldGenerate';
+import FieldGenerator from './mainfield/FieldGenerator';
 import FieldIndex from './mainfield/FieldIndex';
 import FieldInspect from './mainfield/FieldInspect';
 import FieldMeta from './mainfield/FieldMeta';
@@ -64,7 +64,7 @@ export class MainFieldLevel extends Component {
          case TILE_ACTION_REPAIR:
             return <FieldRepair level={level} width_px={width_px} />
          case TILE_ACTION_GENERATE:
-            return <FieldGenerate level={level} width_px={width_px} />
+            return <FieldGenerator level={level} width_px={width_px} />
          case TILE_ACTION_INDEX:
             return <FieldIndex level={level} width_px={width_px} />
          case TILE_ACTION_INSPECT:

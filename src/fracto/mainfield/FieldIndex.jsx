@@ -1,34 +1,15 @@
 import {Component} from 'react';
 import PropTypes from 'prop-types';
-import styled from "styled-components";
-
-import {CoolStyles} from 'common/ui/CoolImports';
+// import styled from "styled-components";
+//
+// import {CoolStyles} from 'common/ui/CoolImports';
 
 import FractoCommon from "../common/FractoCommon";
 import FractoDataLoader from "../common/data/FractoDataLoader";
-import FractoData, {BIN_VERB_COMPLETED, BIN_VERB_INDEXED} from "../common/data/FractoData";
-import FractoTileAutomate, {CONTEXT_SIZE_PX, TILE_SIZE_PX} from "../common/tile/FractoTileAutomate";
-import FractoTileDetails from "../common/tile/FractoTileDetails";
+import FractoData, {BIN_VERB_COMPLETED} from "../common/data/FractoData";
 import FractoUtil from "../common/FractoUtil";
 import FractoMruCache from "../common/data/FractoMruCache";
-
-const WRAPPER_MARGIN_PX = 25
-
-const FieldWrapper = styled(CoolStyles.Block)`
-   margin: ${WRAPPER_MARGIN_PX}px;
-`;
-
-const DetailsWrapper = styled(CoolStyles.InlineBlock)`
-   margin: 0;
-`;
-
-const AutomateWrapper = styled(CoolStyles.InlineBlock)`
-   width: ${CONTEXT_SIZE_PX + TILE_SIZE_PX + 20}px;
-`;
-
-const RecentResult = styled(CoolStyles.Block)`
-   margin: 1rem;
-`;
+import FractoTileAutomator from "../common/tile/FractoTileAutomator";
 
 export class FieldIndex extends Component {
 
@@ -39,47 +20,30 @@ export class FieldIndex extends Component {
 
    state = {
       completed_tiles: [],
-      tile_index: 0,
       loading: true,
-      indexed_loading: true,
-      most_recent_result: ''
    };
 
    componentDidMount() {
-      const {level} = this.props;
+      this.initalize_tile_sets()
+   }
 
-      FractoDataLoader.load_tile_set_async(BIN_VERB_INDEXED, result => {
-         console.log("FractoDataLoader.load_tile_set_async", BIN_VERB_INDEXED, result)
-         FractoData.get_cached_tiles(level, BIN_VERB_INDEXED)
-         FractoData.get_cached_tiles(level - 1, BIN_VERB_INDEXED)
-         FractoData.get_cached_tiles(level - 2, BIN_VERB_INDEXED)
-         FractoData.get_cached_tiles(level - 3, BIN_VERB_INDEXED)
-         FractoData.get_cached_tiles(level - 4, BIN_VERB_INDEXED)
-         this.setState({
-            indexed_loading: false,
-         });
-      });
+   componentDidUpdate(prevProps: Readonly<P>, prevState: Readonly<S>, snapshot: SS) {
+      if (prevProps.level !== this.props.level) {
+         this.initalize_tile_sets()
+      }
+   }
+
+   initalize_tile_sets=()=>{
+      const {level} = this.props;
+      this.setState({loading: true})
       FractoDataLoader.load_tile_set_async(BIN_VERB_COMPLETED, result => {
          console.log("FractoDataLoader.load_tile_set_async", BIN_VERB_COMPLETED, result)
          const completed_tiles = FractoData.get_cached_tiles(level, BIN_VERB_COMPLETED)
-         const tile_index = parseInt(localStorage.getItem(`index_tile_index_${level}`))
          this.setState({
             completed_tiles: completed_tiles,
-            tile_index: tile_index ? tile_index : 0,
             loading: false
          });
       });
-   }
-
-   on_tile_select = (tile_index) => {
-      const {completed_tiles} = this.state;
-      const {level} = this.props
-      if (tile_index >= completed_tiles.length) {
-         return;
-      }
-      this.setState({tile_index: tile_index})
-      localStorage.setItem(`index_tile_index_${level}`, tile_index)
-      const tile = completed_tiles[tile_index]
    }
 
    move_tile = (short_code, from, to, cb) => {
@@ -131,38 +95,21 @@ export class FieldIndex extends Component {
             })
          }
       })
-
    }
 
    render() {
-      const {loading, indexed_loading, completed_tiles, tile_index, most_recent_result} = this.state
-      const {level, width_px} = this.props
-      if (loading || indexed_loading) {
+      const {completed_tiles, loading} = this.state;
+      const {level, width_px} = this.props;
+      if (loading) {
          return FractoCommon.loading_wait_notice()
       }
-      const details_width = width_px - (CONTEXT_SIZE_PX + TILE_SIZE_PX) - 40 - 2 * WRAPPER_MARGIN_PX;
-      const details_style = {
-         width: `${details_width}px`
-      }
-      const active_tile = tile_index >= completed_tiles.length ? {} : completed_tiles[tile_index]
-      return <FieldWrapper>
-         <AutomateWrapper>
-            <FractoTileAutomate
-               all_tiles={completed_tiles}
-               tile_index={tile_index}
-               level={level - 1}
-               tile_action={this.index_tile}
-               on_tile_select={this.on_tile_select}
-            />
-         </AutomateWrapper>
-         <DetailsWrapper style={details_style}>
-            <FractoTileDetails
-               active_tile={active_tile}
-               width_px={details_width}
-            />
-            <RecentResult>{most_recent_result}</RecentResult>
-         </DetailsWrapper>
-      </FieldWrapper>
+      return <FractoTileAutomator
+         all_tiles={completed_tiles}
+         level={level - 1}
+         tile_action={this.index_tile}
+         descriptor={"index"}
+         width_px={width_px}
+      />
    }
 }
 
