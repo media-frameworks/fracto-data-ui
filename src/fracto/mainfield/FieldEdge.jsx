@@ -49,19 +49,21 @@ export class FieldEdge extends Component {
 
    test_edge_case = (tile, tile_data) => {
       if (tile.bounds.bottom === 0) {
-         console.log("will not edge bottom tile");
+         // console.log("will not edge bottom tile");
          return false
       }
       const level = tile.short_code.length
+      const [pattern0, iterations0] = tile_data[0][0];
       for (let img_x = 0; img_x < 256; img_x++) {
          for (let img_y = 0; img_y < 256; img_y++) {
             const [pattern, iterations] = tile_data[img_x][img_y];
-            if (iterations > 2 * level) {
-               console.log("not on edge");
+            if (iterations !== iterations0) {
+               // console.log("not on edge");
                return false;
             }
          }
       }
+      console.log("all points are", iterations0);
       return true
    }
 

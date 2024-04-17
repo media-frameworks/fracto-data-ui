@@ -156,6 +156,7 @@ export class FieldClassify extends Component {
          tile_action={FieldClassify.classify_tile}
          descriptor={"classify"}
          width_px={width_px}
+         auto_refresh={500}
       />
    }
 }

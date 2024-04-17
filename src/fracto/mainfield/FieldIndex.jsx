@@ -55,7 +55,7 @@ export class FieldIndex extends Component {
 
    test_edge_case = (tile, tile_data) => {
       if (tile.bounds.bottom === 0) {
-         console.log("will not edge bottom tile");
+         // console.log("will not edge bottom tile");
          return false
       }
       const level = tile.short_code.length
@@ -63,7 +63,7 @@ export class FieldIndex extends Component {
          for (let img_y = 0; img_y < 256; img_y++) {
             const [pattern, iterations] = tile_data[img_x][img_y];
             if (iterations > 2 * level) {
-               console.log("not on edge");
+               // console.log("not on edge", pattern);
                return false;
             }
          }
@@ -80,6 +80,12 @@ export class FieldIndex extends Component {
 
    index_tile = (tile, cb) => {
       FractoMruCache.get_tile_data(tile.short_code, data => {
+         if (!data) {
+            this.move_tile(tile.short_code, "complete", "error", result => {
+               this.setState({most_recent_result: result})
+               cb(result)
+            })
+         }
          const is_edge = this.test_edge_case(tile, data)
          if (is_edge) {
             this.empty_tile(tile.short_code, result => {
@@ -109,6 +115,7 @@ export class FieldIndex extends Component {
          tile_action={this.index_tile}
          descriptor={"index"}
          width_px={width_px}
+         auto_refresh={500}
       />
    }
 }

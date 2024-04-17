@@ -84,6 +84,20 @@ export class FieldGenerate extends Component {
       });
    }
 
+   componentDidUpdate(prevProps: Readonly<P>, prevState: Readonly<S>, snapshot: SS) {
+      const {level} = this.props;
+      if (this.props.level === prevProps.level) {
+         return;
+      }
+      const inland_tiles = FractoData.get_cached_tiles(level, BIN_VERB_INLAND)
+      const ready_tiles = FractoData.get_cached_tiles(level, BIN_VERB_READY)
+      console.log("updating tiles for level", level)
+      this.setState({
+         inland_tiles: inland_tiles,
+         ready_tiles: ready_tiles
+      });
+   }
+
    set_tile_index = (tile_index) => {
       const {level} = this.props;
       this.setState({tile_index: tile_index})
@@ -106,7 +120,7 @@ export class FieldGenerate extends Component {
             (a.bounds.left > b.bounds.left ? 1 : -1)
       })
       if (!all_tiles.length) {
-         return "no tiles"
+         return "no tiles 3"
       }
       if (tile_index < 0) {
          return "no tile"

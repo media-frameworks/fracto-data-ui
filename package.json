@@ -12,6 +12,9 @@
     "@testing-library/react": "^13.4.0",
     "@testing-library/user-event": "^13.5.0",
     "aws-sdk": "^2.1321.0",
+    "buffer": "^6.0.3",
+    "fflate": "^0.8.1",
+    "fs": "^0.0.1-security",
     "javascript-time-ago": "^2.5.9",
     "react": "^16.14.0",
     "react-dom": "^16.14.0",
@@ -25,7 +28,7 @@
   },
   "scripts": {
     "start": "set PORT=3000 && react-scripts start",
-    "start-dev": "set PORT=3100 && react-scripts start",
+    "start-dev": "set PORT=3100 && set REACT_APP_DEV=1 && react-scripts start",
     "build": "react-scripts build",
     "test": "react-scripts test",
     "eject": "react-scripts eject"
