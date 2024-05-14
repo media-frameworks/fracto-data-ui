@@ -407,7 +407,7 @@ export class FieldGenerator extends Component {
          width_px={width_px}
          on_render_detail={(tile, detail_width_px) => this.on_render_detail(tile, detail_width_px)}
          on_render_tile={this.on_render_tile}
-         auto_refresh={tile_option === TILE_OPTION_INLAND ? 0 : 350}
+         auto_refresh={tile_option === TILE_OPTION_INLAND ? 0 : 2500}
       />
    }
 }
