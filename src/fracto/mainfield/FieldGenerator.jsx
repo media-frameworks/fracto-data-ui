@@ -12,6 +12,7 @@ import FractoUtil from 'fracto/common/FractoUtil';
 import FractoTileAutomator from "../common/tile/FractoTileAutomator";
 import FractoTileGenerate from "../common/tile/FractoTileGenerate";
 import FractoTileRender from "../common/tile/FractoTileRender";
+import FractoMruCache from "../common/data/FractoMruCache";
 
 const SORT_TYPE_RADIAL = "sort_type_radial"
 const SORT_TYPE_CARTESIAN = "sort_type_cartesian"
@@ -185,7 +186,7 @@ export class FieldGenerator extends Component {
                if (tile_option === TILE_OPTION_ALL_TILES) {
                   all_tiles = this.merge_tiles(this.state.inland_tiles, ready_tiles)
                } else {
-                  all_tiles =this.merge_tiles([], ready_tiles)
+                  all_tiles = this.merge_tiles([], ready_tiles)
                }
                this.setState({
                   ready_loading: false,
@@ -367,14 +368,92 @@ export class FieldGenerator extends Component {
       </CoolStyles.Block>
    }
 
+   test_edge_case = (tile, tile_data) => {
+      if (tile.bounds.bottom === 0) {
+         // console.log("will not edge bottom tile");
+         return false
+      }
+      const [pattern0, iterations0] = tile_data[0][0];
+      for (let img_x = 0; img_x < 256; img_x++) {
+         for (let img_y = 0; img_y < 256; img_y++) {
+            const [pattern, iterations] = tile_data[img_x][img_y];
+            if (iterations !== iterations0) {
+               // console.log("not on edge");
+               return false;
+            }
+         }
+      }
+      console.log("all points are", iterations0);
+      return true
+   }
+
+   compare_tile_data = (points_1, points_2) => {
+      if (!points_1) {
+         return false
+      }
+      if (!points_2) {
+         return false
+      }
+      if (points_1.length !== 256) {
+         return false
+      }
+      if (points_2.length !== 256) {
+         return false
+      }
+      for (let img_x = 0; img_x < 256; img_x++) {
+         if (points_1[img_x].length !== 256) {
+            return false
+         }
+         if (points_2[img_x].length !== 256) {
+            return false
+         }
+         for (let img_y = 0; img_y < 256; img_y++) {
+            if (points_1[img_x][img_y].length !== 2) {
+               return false;
+            }
+            if (points_2[img_x][img_y].length !== 2) {
+               return false;
+            }
+            if (points_1[img_x][img_y][0] !== points_2[img_x][img_y][0]) {
+               return false
+            }
+            if (points_1[img_x][img_y][1] !== points_2[img_x][img_y][1]) {
+               return false
+            }
+         }
+      }
+      return true;
+   }
+
    generate_tile = (tile, cb) => {
       const {tile_option} = this.state
+      const start = performance.now()
       const tile_points = FractoTileGenerate.prepare_tile()
       this.setState({tile_points: tile_points})
       let tile_copy = JSON.parse(JSON.stringify(tile))
       tile_copy.inland_tile = tile_option === TILE_OPTION_INLAND
       FractoTileGenerate.generate_tile(tile_copy, tile_points, response => {
-         cb(response)
+         const is_edge_tile = this.test_edge_case(tile, tile_points);
+         if (is_edge_tile) {
+            FractoUtil.empty_tile(tile.short_code, result => {
+               console.log("FractoUtil.empty_tile", tile.short_code, result);
+               const full_history = [response, result].join(', ')
+               cb(full_history)
+            })
+         } else {
+            FractoUtil.tile_to_bin(tile.short_code, "complete", "indexed", result => {
+               console.log("FractoUtil.tile_to_bin", tile.short_code, "complete", "indexed", result);
+               FractoMruCache.get_tile_data_raw(tile.short_code, data => {
+                  console.log('get_tile_data_raw', data ? data.length : 0)
+                  const success = this.compare_tile_data(tile_points, data) ?
+                     'with success' : 'with no success'
+                  const end = performance.now()
+                  const timing = `in ${Math.round((end - start)) / 1000}s`
+                  const full_history = [response, result.result, timing, success].join(', ')
+                  cb(full_history)
+               })
+            })
+         }
       })
    }
 
@@ -388,13 +467,13 @@ export class FieldGenerator extends Component {
    }
 
    render() {
-      const {ready_loading, inland_loading, all_tiles, sort_type,tile_option, inland_tiles, ready_tiles} = this.state;
+      const {ready_loading, inland_loading, all_tiles, sort_type, tile_option, inland_tiles, ready_tiles} = this.state;
       const {level, width_px} = this.props;
       if (ready_loading || inland_loading) {
          return FractoCommon.loading_wait_notice()
       }
       if (!all_tiles.length) {
-         setTimeout(()=>{
+         setTimeout(() => {
             const automatorTiles = this.merge_tiles(inland_tiles, ready_tiles)
             this.setState({all_tiles: automatorTiles})
          }, 1000)

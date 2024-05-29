@@ -48,7 +48,7 @@ export class FieldIndex extends Component {
 
    move_tile = (short_code, from, to, cb) => {
       FractoUtil.tile_to_bin(short_code, from, to, result => {
-         console.log("FractoUtil.tile_to_bin", short_code, from, to, result);
+            console.log("FractoUtil.tile_to_bin", short_code, from, to, result);
          cb(result.result)
       })
    }
