@@ -42,7 +42,11 @@ export class FieldNextGen extends Component {
    componentDidMount() {
       const {level} = this.props;
       const sort_extra = localStorage.getItem(`${LS_KEY_SORT_EXTRA}_${level}`)
-      this.setState({sort_extra: sort_extra})
+      if (!sort_extra) {
+         localStorage.setItem(`${LS_KEY_SORT_EXTRA}_${level}`, SORT_LEFT_TO_RIGHT)
+      } else {
+         this.setState({sort_extra: sort_extra})
+      }
       setTimeout(() => {
          this.load_tile_sets()
       }, 250)
@@ -131,7 +135,7 @@ export class FieldNextGen extends Component {
       for (let img_x = 0; img_x < 256; img_x++) {
          for (let img_y = 0; img_y < 256; img_y++) {
             const [pattern, iterations] = tile_data[img_x][img_y];
-            if (iterations !== iterations0 && pattern !== pattern0) {
+            if (iterations !== iterations0 || pattern !== pattern0) {
                // console.log("not on edge");
                return false;
             }
@@ -199,23 +203,22 @@ export class FieldNextGen extends Component {
          if (is_edge_tile) {
             FractoUtil.empty_tile(tile.short_code, result => {
                console.log("FractoUtil.empty_tile", tile.short_code, result);
-               const full_history = [response, result].join(', ')
+               const full_history = [response, 'is empty', result].join(', ')
                cb(full_history)
             })
          } else {
             FractoUtil.tile_to_bin(tile.short_code, "complete", "indexed", result => {
                console.log("FractoUtil.tile_to_bin", tile.short_code, "complete", "indexed", result);
                const end = performance.now()
-               const timing = `in ${Math.round((end - start)) / 1000}s`
-               setTimeout(() => {
-                  FractoMruCache.get_tile_data_raw(tile.short_code, data => {
-                     console.log(`get_tile_data_raw ${tile.short_code}`, data ? data.length : 0)
-                     const success = this.compare_tile_data(tile_points, data) ?
-                        'with success' : 'with no success'
-                     const full_history = [response, result.result, timing, success].join(', ')
-                     cb(full_history)
-                  })
-               }, 50)
+               FractoMruCache.get_tile_data_raw(tile.short_code, data => {
+                  // console.log(`get_tile_data_raw ${tile.short_code}`, data ? data.length : 0)
+                  const success = this.compare_tile_data(tile_points, data)
+                  const seconds = Math.round((end - start)) / 1000
+                  const full_history = `${response}, ${result.result} in ${seconds}s`
+                  setTimeout(() => {
+                     cb(success ? full_history : false)
+                  }, 50)
+               })
             })
          }
       })
@@ -300,7 +303,7 @@ export class FieldNextGen extends Component {
          on_render_tile={this.on_render_tile}
          on_select_tile={this.on_select_tile}
          on_render_detail={this.on_render_detail}
-         auto_refresh={10000}
+         auto_refresh={0}
       />
    }
 }

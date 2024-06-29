@@ -181,7 +181,7 @@ export class FieldClassify extends Component {
          width_px={width_px}
          on_render_tile={this.on_render_tile}
          on_select_tile={this.on_select_tile}
-         auto_refresh={10000}
+         auto_refresh={0}
       />
    }
 }
