@@ -205,7 +205,7 @@ export class FieldStats extends Component {
    }
 
    render() {
-      const {rows, in_update, update_status} = this.state
+      const {rows, update_status} = this.state
       const unknown_rows = rows.filter(row => row.status === 'unknown')
       const indexed_rows = rows.filter(row => row.status === BIN_VERB_INDEXED)
       const potentials_rows = rows.filter(row => row.status === BIN_VERB_POTENTIALS)

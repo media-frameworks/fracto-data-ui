@@ -2,17 +2,14 @@ import {Component} from 'react';
 import PropTypes from 'prop-types';
 // import styled from "styled-components";
 //
-// import {CoolStyles} from 'common/ui/CoolImports';
+import {CoolStyles} from 'common/ui/CoolImports';
 
-import FractoData, {
-   BIN_VERB_POTENTIALS,
-} from 'fracto/common/data/FractoData';
-import FractoDataLoader from 'fracto/common/data/FractoDataLoader';
 import FractoCommon from 'fracto/common/FractoCommon';
 import FractoUtil from 'fracto/common/FractoUtil';
 
 import FractoMruCache from "../common/data/FractoMruCache";
 import FractoTileAutomator from "../common/tile/FractoTileAutomator";
+import FractoIndexedTiles from "../common/data/FractoIndexedTiles";
 
 export class FieldClassify extends Component {
 
@@ -22,8 +19,8 @@ export class FieldClassify extends Component {
    }
 
    state = {
-      new_tiles: [],
-      new_loading: true,
+      potentials_tiles: [],
+      potentials_loading: true,
    };
 
    componentDidMount() {
@@ -39,13 +36,25 @@ export class FieldClassify extends Component {
    initalize_tile_sets = () => {
       const {level} = this.props;
       this.setState({loading: true})
-      FractoDataLoader.load_tile_set_async(BIN_VERB_POTENTIALS, result => {
-         const new_tiles = FractoData.get_cached_tiles(level, BIN_VERB_POTENTIALS)
-         console.log("FractoDataLoader.load_tile_set_async", BIN_VERB_POTENTIALS, result)
+      FractoIndexedTiles.load_short_codes("new", potentials_short_codes => {
+         console.log("potentials_short_codes.length", potentials_short_codes.length)
+         const potentials_tiles = potentials_short_codes
+            .filter(sc => sc.length === level)
+            .map((short_code, i) => {
+               return {
+                  bounds: FractoUtil.bounds_from_short_code(short_code),
+                  short_code: short_code
+               }
+            })
+            .sort((a, b) => {
+               return a.bounds.left === b.bounds.left ?
+                  (a.bounds.top > b.bounds.top ? -1 : 1) :
+                  (a.bounds.left > b.bounds.left ? 1 : -1)
+            })
          this.setState({
-            new_loading: false,
-            new_tiles: new_tiles,
-         });
+            potentials_tiles: potentials_tiles,
+            potentials_loading: false,
+         })
       })
    }
 
@@ -144,19 +153,35 @@ export class FieldClassify extends Component {
       }, false);
    }
 
+   on_render_tile = (tile, width_px) => {
+      return <CoolStyles.InlineBlock style={{width: `${width_px}px`}}>
+         {'no tile here'}
+      </CoolStyles.InlineBlock>
+   }
+
+   on_select_tile = (tile, cb) => {
+      if (cb) {
+         setTimeout(() => {
+            cb(true)
+         }, 500)
+      }
+   }
+
    render() {
-      const {new_tiles, new_loading} = this.state;
+      const {potentials_tiles, potentials_loading} = this.state;
       const {level, width_px} = this.props;
-      if (new_loading) {
-         return FractoCommon.loading_wait_notice()
+      if (potentials_loading) {
+         return FractoCommon.loading_wait_notice("FieldClassify")
       }
       return <FractoTileAutomator
-         all_tiles={new_tiles}
+         all_tiles={potentials_tiles}
          level={level - 1}
          tile_action={FieldClassify.classify_tile}
          descriptor={"classify"}
          width_px={width_px}
-         auto_refresh={500}
+         on_render_tile={this.on_render_tile}
+         on_select_tile={this.on_select_tile}
+         auto_refresh={10000}
       />
    }
 }

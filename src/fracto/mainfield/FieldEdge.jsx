@@ -52,12 +52,11 @@ export class FieldEdge extends Component {
          // console.log("will not edge bottom tile");
          return false
       }
-      const level = tile.short_code.length
       const [pattern0, iterations0] = tile_data[0][0];
       for (let img_x = 0; img_x < 256; img_x++) {
          for (let img_y = 0; img_y < 256; img_y++) {
             const [pattern, iterations] = tile_data[img_x][img_y];
-            if (iterations !== iterations0) {
+            if (iterations !== iterations0 || pattern !== pattern0) {
                // console.log("not on edge");
                return false;
             }

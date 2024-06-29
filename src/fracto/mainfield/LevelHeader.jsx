@@ -10,20 +10,19 @@ export const TILE_ACTION_CLASSIFY = "classify";
 export const TILE_ACTION_EDGE = "edge";
 export const TILE_ACTION_GENERATE = "generate";
 export const TILE_ACTION_INDEX = "index";
-export const TILE_ACTION_INSPECT = "inspect";
+export const TILE_ACTION_NEXTGEN = "nextgen";
 export const TILE_ACTION_META = "meta";
 export const TILE_ACTION_STATS = "stats";
-export const TILE_ACTION_REPAIR = "repair";
-export const TILE_ACTION_POINTS = "points";
+export const TILE_ACTION_REFINE = "refine";
 
 const BUTTON_LABELS = [
    TILE_ACTION_CLASSIFY,
    TILE_ACTION_EDGE,
    TILE_ACTION_GENERATE,
    TILE_ACTION_INDEX,
-   TILE_ACTION_INSPECT,
+   TILE_ACTION_NEXTGEN,
    TILE_ACTION_META,
-   TILE_ACTION_REPAIR,
+   TILE_ACTION_REFINE,
    TILE_ACTION_STATS,
 ]
 

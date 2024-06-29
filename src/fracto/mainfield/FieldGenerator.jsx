@@ -377,7 +377,7 @@ export class FieldGenerator extends Component {
       for (let img_x = 0; img_x < 256; img_x++) {
          for (let img_y = 0; img_y < 256; img_y++) {
             const [pattern, iterations] = tile_data[img_x][img_y];
-            if (iterations !== iterations0) {
+            if (iterations !== iterations0 && pattern !== pattern0) {
                // console.log("not on edge");
                return false;
             }
@@ -459,6 +459,7 @@ export class FieldGenerator extends Component {
 
    on_render_tile = (tile, width_px) => {
       const {tile_points} = this.state
+      console.log('tile_points',tile_points)
       return <FractoTileRender
          key={`render-${tile.short_code}`}
          tile={tile}
@@ -467,17 +468,17 @@ export class FieldGenerator extends Component {
    }
 
    render() {
-      const {ready_loading, inland_loading, all_tiles, sort_type, tile_option, inland_tiles, ready_tiles} = this.state;
+      const {ready_loading, inland_loading, all_tiles, tile_option} = this.state;
       const {level, width_px} = this.props;
       if (ready_loading || inland_loading) {
-         return FractoCommon.loading_wait_notice()
+         return FractoCommon.loading_wait_notice(`FieldGenerator`)
       }
-      if (!all_tiles.length) {
-         setTimeout(() => {
-            const automatorTiles = this.merge_tiles(inland_tiles, ready_tiles)
-            this.setState({all_tiles: automatorTiles})
-         }, 1000)
-      }
+      // if (!all_tiles.length) {
+      //    setTimeout(() => {
+      //       const automatorTiles = this.merge_tiles(inland_tiles, ready_tiles)
+      //       this.setState({all_tiles: automatorTiles})
+      //    }, 1000)
+      // }
       return <FractoTileAutomator
          all_tiles={all_tiles}
          level={level}

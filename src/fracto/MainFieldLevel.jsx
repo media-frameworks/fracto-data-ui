@@ -8,18 +8,18 @@ import LevelHeader, {
    TILE_ACTION_EDGE,
    TILE_ACTION_GENERATE,
    TILE_ACTION_INDEX,
-   TILE_ACTION_INSPECT,
    TILE_ACTION_META,
-   TILE_ACTION_REPAIR,
+   TILE_ACTION_NEXTGEN,
+   TILE_ACTION_REFINE,
    TILE_ACTION_STATS,
 } from './mainfield/LevelHeader';
 
 import FieldClassify from './mainfield/FieldClassify';
 import FieldEdge from './mainfield/FieldEdge';
-import FieldRepair from './mainfield/FieldRepair';
+import FieldRefine from './mainfield/FieldRefine';
 import FieldGenerator from './mainfield/FieldGenerator';
 import FieldIndex from './mainfield/FieldIndex';
-import FieldInspect from './mainfield/FieldInspect';
+import FieldNextGen from './mainfield/FieldNextGen';
 import FieldMeta from './mainfield/FieldMeta';
 import FieldStats from './mainfield/FieldStats';
 
@@ -58,21 +58,21 @@ export class MainFieldLevel extends Component {
       }
       switch (tab) {
          case TILE_ACTION_CLASSIFY:
-            return <FieldClassify level={level} width_px={width_px} />
+            return <FieldClassify level={level} width_px={width_px}/>
          case TILE_ACTION_EDGE:
-            return <FieldEdge level={level} width_px={width_px} />
-         case TILE_ACTION_REPAIR:
-            return <FieldRepair level={level} width_px={width_px} />
+            return <FieldEdge level={level} width_px={width_px}/>
+         case TILE_ACTION_REFINE:
+            return <FieldRefine level={level} width_px={width_px}/>
          case TILE_ACTION_GENERATE:
-            return <FieldGenerator level={level} width_px={width_px} />
+            return <FieldGenerator level={level} width_px={width_px}/>
          case TILE_ACTION_INDEX:
-            return <FieldIndex level={level} width_px={width_px} />
-         case TILE_ACTION_INSPECT:
-            return <FieldInspect level={level} width_px={width_px} />
+            return <FieldIndex level={level} width_px={width_px}/>
+         case TILE_ACTION_NEXTGEN:
+            return <FieldNextGen level={level} width_px={width_px}/>
          case TILE_ACTION_META:
-            return <FieldMeta level={level} width_px={width_px} />
+            return <FieldMeta level={level} width_px={width_px}/>
          case TILE_ACTION_STATS:
-            return <FieldStats level={level} width_px={width_px} />
+            return <FieldStats level={level} width_px={width_px}/>
          default:
             console.log("unknown tab", tab)
             break;
