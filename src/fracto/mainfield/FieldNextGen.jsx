@@ -303,7 +303,7 @@ export class FieldNextGen extends Component {
          on_render_tile={this.on_render_tile}
          on_select_tile={this.on_select_tile}
          on_render_detail={this.on_render_detail}
-         auto_refresh={5000}
+         auto_refresh={0}
       />
    }
 }
