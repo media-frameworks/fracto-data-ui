@@ -163,7 +163,7 @@ export class FieldClassify extends Component {
       if (cb) {
          setTimeout(() => {
             cb(true)
-         }, 500)
+         }, 200)
       }
    }
 
