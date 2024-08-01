@@ -18,7 +18,12 @@ const SORT_RIGHT_TO_LEFT = "sort_right_to_left"
 const SORT_TOP_TO_BOTTOM = "sort_top_to_bottom"
 const SORT_BOTTOM_TO_TOP = "sort_bottom_to_top"
 
+const TILE_SET_INLAND = "tile_set_inland"
+const TILE_SET_NOT_INLAND = "tile_set_not_inland"
+const TILE_SET_BOTH = "tile_set_both"
+
 const LS_KEY_SORT_EXTRA = 'LS_KEY_SORT_EXTRA'
+const LS_KEY_TILE_SET = 'LS_KEY_TILE_SET'
 
 const SelectWrapper = styled(CoolStyles.InlineBlock)`
    margin: 1rem 0.5rem;
@@ -36,17 +41,30 @@ export class FieldNextGen extends Component {
       ready_loading: true,
       inland_tiles: [],
       inland_loading: true,
-      sort_extra: SORT_LEFT_TO_RIGHT
+      both_tiles: [],
+      sort_extra: SORT_LEFT_TO_RIGHT,
+      tile_set: TILE_SET_INLAND,
    };
 
    componentDidMount() {
       const {level} = this.props;
-      const sort_extra = localStorage.getItem(`${LS_KEY_SORT_EXTRA}_${level}`)
+
+      const sort_extra_key = `${LS_KEY_SORT_EXTRA}_${level}`
+      const sort_extra = localStorage.getItem(sort_extra_key)
       if (!sort_extra) {
-         localStorage.setItem(`${LS_KEY_SORT_EXTRA}_${level}`, SORT_LEFT_TO_RIGHT)
+         localStorage.setItem(sort_extra_key, SORT_LEFT_TO_RIGHT)
       } else {
          this.setState({sort_extra: sort_extra})
       }
+
+      const tile_set_key = `${LS_KEY_TILE_SET}_${level}`
+      const tile_set = localStorage.getItem(tile_set_key)
+      if (!tile_set) {
+         localStorage.setItem(tile_set_key, TILE_SET_NOT_INLAND)
+      } else {
+         this.setState({tile_set: tile_set})
+      }
+
       setTimeout(() => {
          this.load_tile_sets()
       }, 250)
@@ -120,6 +138,7 @@ export class FieldNextGen extends Component {
                })
             this.setState({
                inland_tiles: this.sort_tiles(inland_tiles),
+               both_tiles: this.sort_tiles(inland_tiles.concat(ready_tiles)),
                inland_loading: false,
             })
          })
@@ -245,13 +264,12 @@ export class FieldNextGen extends Component {
          }
          return
       }
-      console.log("on_select_tile", tile)
-      FractoMruCache.get_tile_data(tile.short_code, tile_points => {
-         this.setState({tile_points: tile_points})
+      // console.log("on_select_tile", tile)
+      setTimeout(()=>{
          if (cb) {
             cb('tile selected')
          }
-      })
+      }, 100)
    }
 
    on_sort_extra = (new_sort_extra) => {
@@ -271,13 +289,35 @@ export class FieldNextGen extends Component {
       }, 500)
    }
 
+   on_tile_set = (new_tile_set) => {
+      const {inland_loading, ready_loading} = this.state
+      const {level} = this.props;
+      if (inland_loading || ready_loading) {
+         return
+      }
+      this.setState({
+         tile_set: new_tile_set,
+         ready_loading: true,
+         inland_loading: true
+      })
+      localStorage.setItem(`${LS_KEY_TILE_SET}_${level}`, new_tile_set)
+      setTimeout(() => {
+         this.load_tile_sets()
+      }, 500)
+   }
+
    on_render_detail = () => {
-      const {sort_extra} = this.state
+      const {sort_extra, tile_set} = this.state
       const extra_options = [
          {label: "left to right", value: SORT_LEFT_TO_RIGHT},
          {label: "right to left", value: SORT_RIGHT_TO_LEFT},
          {label: "top to bottom", value: SORT_TOP_TO_BOTTOM},
          {label: "bottom to top", value: SORT_BOTTOM_TO_TOP}
+      ]
+      const tile_set_options = [
+         {label: "inland", value: TILE_SET_INLAND},
+         {label: "not inland", value: TILE_SET_NOT_INLAND},
+         {label: "both", value: TILE_SET_BOTH},
       ]
       return <CoolStyles.Block>
          <SelectWrapper><CoolSelect
@@ -285,17 +325,43 @@ export class FieldNextGen extends Component {
             value={sort_extra}
             on_change={e => this.on_sort_extra(e.target.value)}/>
          </SelectWrapper>
+         <SelectWrapper><CoolSelect
+            options={tile_set_options}
+            value={tile_set}
+            on_change={e => this.on_tile_set(e.target.value)}/>
+         </SelectWrapper>
       </CoolStyles.Block>
    }
 
+   on_context_rendered = (tile_data) => {
+      console.log("on_context_rendered tile_data", tile_data);
+   }
+
    render() {
-      const {ready_loading, inland_loading, ready_tiles} = this.state
+      const {
+         ready_loading, inland_loading,
+         ready_tiles, inland_tiles, both_tiles, tile_set
+      } = this.state
       const {level, width_px} = this.props;
       if (ready_loading || inland_loading) {
          return FractoCommon.loading_wait_notice(`FieldNextGen: ready is ${ready_loading ? 'in progress' : 'complete'}, inland is ${ready_loading ? 'waiting' : 'in progress'}`)
       }
+      let all_tiles = []
+      switch (tile_set) {
+         case TILE_SET_BOTH:
+            all_tiles = both_tiles;
+            break;
+         case TILE_SET_INLAND:
+            all_tiles = inland_tiles;
+            break;
+         case TILE_SET_NOT_INLAND:
+            all_tiles = ready_tiles;
+            break;
+         default:
+            break;
+      }
       return <FractoTileAutomator
-         all_tiles={ready_tiles}
+         all_tiles={all_tiles}
          level={level}
          tile_action={this.generate_tile}
          descriptor={"next-gen"}
@@ -303,6 +369,7 @@ export class FieldNextGen extends Component {
          on_render_tile={this.on_render_tile}
          on_select_tile={this.on_select_tile}
          on_render_detail={this.on_render_detail}
+         on_context_rendered={this.on_context_rendered}
          auto_refresh={0}
       />
    }
