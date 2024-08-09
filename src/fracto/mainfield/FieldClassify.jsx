@@ -175,7 +175,7 @@ export class FieldClassify extends Component {
       }
       return <FractoTileAutomator
          all_tiles={potentials_tiles}
-         level={level - 1}
+         level={level - 2}
          tile_action={FieldClassify.classify_tile}
          descriptor={"classify"}
          width_px={width_px}
